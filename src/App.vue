@@ -1,6 +1,8 @@
 <template>
-  <gmap-map :center="center" :zoom="7" style="height: 100%; width: 75%">
-    <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position"></gmap-marker>
+  <gmap-map :center="center" :zoom="3" style="height: 100%; width: 75%">
+    <google-cluster>
+      <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position"></gmap-marker>
+    </google-cluster>
   </gmap-map>
 </template>
 
@@ -8,6 +10,7 @@
 import * as VueGoogleMaps from 'vue2-google-maps';
 import Vue from 'vue';
 import axios from 'axios'
+import MarkerClusterer from './markerclusterer'
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -15,10 +18,12 @@ Vue.use(VueGoogleMaps, {
   }
 });
 
+Vue.component('google-cluster', VueGoogleMaps.Cluster);
+
 export default {
   data() {
     return {
-      center: { lat: 10.0, lng: 10.0 },
+      center: { lat: 0, lng: 0 },
       markers: [],
       networks: []
     }
@@ -43,7 +48,7 @@ export default {
   },
   created() {
     this.getNetworks(this.createNetworkMarkers)
-  },
+  }
 }
 </script>
 
