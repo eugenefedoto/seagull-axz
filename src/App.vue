@@ -1,7 +1,7 @@
 <template>
   <gmap-map :center="center" :zoom="3" style="height: 100%; width: 75%">
     <google-cluster>
-      <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position"></gmap-marker>
+      <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
     </google-cluster>
   </gmap-map>
 </template>
@@ -10,7 +10,6 @@
 import * as VueGoogleMaps from 'vue2-google-maps';
 import Vue from 'vue';
 import axios from 'axios'
-import MarkerClusterer from './markerclusterer'
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -25,7 +24,9 @@ export default {
     return {
       center: { lat: 0, lng: 0 },
       markers: [],
-      networks: []
+      networks: [],
+      selectedNetwork: {},
+      stations: []
     }
   },
   methods: {
@@ -42,8 +43,30 @@ export default {
     },
     createNetworkMarkers() {
       this.networks.forEach((network) => {
-        this.markers.push({ position: { lat: network.lat, lng: network.lng } })
+        const marker = {
+          title: network.name,
+          icon: '/bike.png',
+          network,
+          position: {
+            lat: network.lat, lng: network.lng
+          },
+          id: network.id
+        }
+        this.markers.push(marker)
       });
+    },
+    getStations(marker) {
+      this.center = marker.position
+      this.network = marker.network
+      axios
+        .get("/api/network/" + this.network.id)
+        .then(res => {
+          this.selectedNetwork = res.data;
+          this.stations = selectedNetwork.stations;
+        })
+        .catch(error => {
+          console.log(error)
+        });
     }
   },
   created() {
