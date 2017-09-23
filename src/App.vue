@@ -1,21 +1,30 @@
 <template>
-  <sidebar>
-    <gmap-map slot="pusher" :center="center" :zoom="3" style="height: 100%; width: 100%">
-      <google-cluster>
-        <gmap-marker :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
-      </google-cluster>
-    </gmap-map>
-    <div slot="sidebar" class="item">test aaaaaaa</div>
-  </sidebar>
+  <b-container fluid class="map-table-container">
+    <b-row no-gutters class="map-table-row">
+      <b-col xl="9">
+        <gmap-map :center="center" :zoom="3" style="height: 100%;">
+          <google-cluster>
+            <gmap-marker :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
+          </google-cluster>
+        </gmap-map>
+      </b-col>
+      <b-col><template>
+  <b-table striped hover :items="items"></b-table>
+</template></b-col>
+    </b-row>
+  </b-container>
 </template>
 
 <script>
 import * as VueGoogleMaps from 'vue2-google-maps';
 import Vue from 'vue';
 import axios from 'axios'
-import { Mixin } from 'semantic-ui-vue2'
+import BootstrapVue from 'bootstrap-vue'
 import Sidebar from './components/Sidebar.vue'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+Vue.use(BootstrapVue);
 Vue.use(VueGoogleMaps, {
   load: {
     key: 'AIzaSyDDy5IUrvL4bVAdeQ_MBvcqsy1rgs5X3V4'
@@ -24,6 +33,13 @@ Vue.use(VueGoogleMaps, {
 
 Vue.component('google-cluster', VueGoogleMaps.Cluster);
 
+const items = [
+  { isActive: true,  age: 40, first_name: 'Dickerson', last_name: 'Macdonald' },
+  { isActive: false, age: 21, first_name: 'Larsen', last_name: 'Shaw' },
+  { isActive: false, age: 89, first_name: 'Geneva', last_name: 'Wilson' },
+  { isActive: true,  age: 38, first_name: 'Jami', last_name: 'Carney' }
+];
+
 export default {
   data() {
     return {
@@ -31,7 +47,8 @@ export default {
       markers: [],
       networks: [],
       selectedNetwork: {},
-      stations: []
+      stations: [],
+      items: items
     }
   },
   methods: {
@@ -77,17 +94,16 @@ export default {
   created() {
     this.getNetworks(this.createNetworkMarkers)
   },
-  mixins: [Mixin],
-  components:{Sidebar}
+  components: { Sidebar }
 }
 </script>
 
 <style>
 html,
 body,
-app {
+app,
+.map-table-container,
+.map-table-row {
   height: 100%;
-  margin: 0;
-  padding: 0;
 }
 </style>
