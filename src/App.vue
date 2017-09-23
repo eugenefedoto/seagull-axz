@@ -1,15 +1,20 @@
 <template>
-  <gmap-map :center="center" :zoom="3" style="height: 100%; width: 75%">
-    <google-cluster>
-      <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
-    </google-cluster>
-  </gmap-map>
+  <sidebar>
+    <gmap-map slot="pusher" :center="center" :zoom="3" style="height: 100%; width: 100%">
+      <google-cluster>
+        <gmap-marker :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
+      </google-cluster>
+    </gmap-map>
+    <div slot="sidebar" class="item">test aaaaaaa</div>
+  </sidebar>
 </template>
 
 <script>
 import * as VueGoogleMaps from 'vue2-google-maps';
 import Vue from 'vue';
 import axios from 'axios'
+import { Mixin } from 'semantic-ui-vue2'
+import Sidebar from './components/Sidebar.vue'
 
 Vue.use(VueGoogleMaps, {
   load: {
@@ -45,7 +50,7 @@ export default {
       this.networks.forEach((network) => {
         const marker = {
           title: network.name,
-          icon: '/bike.png',
+          icon: '/assets/bike.png',
           network,
           position: {
             lat: network.lat, lng: network.lng
@@ -71,13 +76,16 @@ export default {
   },
   created() {
     this.getNetworks(this.createNetworkMarkers)
-  }
+  },
+  mixins: [Mixin],
+  components:{Sidebar}
 }
 </script>
 
 <style>
 html,
-body {
+body,
+app {
   height: 100%;
   margin: 0;
   padding: 0;
