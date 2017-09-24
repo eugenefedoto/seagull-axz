@@ -5,7 +5,7 @@
   "author": "Eugene Fedotov <eugenefedoto@gmail.com>",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot --inline",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot --inline --public localhost:8080",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules --output-public-path /assets/"
   },
   "dependencies": {

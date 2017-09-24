@@ -4,13 +4,16 @@
       <b-col xl="9">
         <gmap-map :center="center" :zoom="3" style="height: 100%;">
           <google-cluster>
-            <gmap-marker :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="getStations(m)"></gmap-marker>
+            <gmap-marker class="network-markers" :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(marker, index) in markers" :position="marker.position" :clickable="true" :draggable="true" @click="getStations(marker)"></gmap-marker>
+          </google-cluster>
+          <google-cluster>
+            <gmap-marker class="station-markers" :icon="'http://localhost:9090/bike.png'" :key="index" v-for="(station, index) in stations" :position="m.position" :clickable="true" :draggable="true" @click="selectStation(station)"></gmap-marker>
           </google-cluster>
         </gmap-map>
       </b-col>
-      <b-col><template>
-  <b-table striped hover :items="items"></b-table>
-</template></b-col>
+      <b-col>
+        <sidebar :selectedStation="selectedStation"></sidebar>
+      </b-col>
     </b-row>
   </b-container>
 </template>
@@ -34,10 +37,10 @@ Vue.use(VueGoogleMaps, {
 Vue.component('google-cluster', VueGoogleMaps.Cluster);
 
 const items = [
-  { isActive: true,  age: 40, first_name: 'Dickerson', last_name: 'Macdonald' },
+  { isActive: true, age: 40, first_name: 'Dickerson', last_name: 'Macdonald' },
   { isActive: false, age: 21, first_name: 'Larsen', last_name: 'Shaw' },
   { isActive: false, age: 89, first_name: 'Geneva', last_name: 'Wilson' },
-  { isActive: true,  age: 38, first_name: 'Jami', last_name: 'Carney' }
+  { isActive: true, age: 38, first_name: 'Jami', last_name: 'Carney' }
 ];
 
 export default {
@@ -48,7 +51,8 @@ export default {
       networks: [],
       selectedNetwork: {},
       stations: [],
-      items: items
+      items: items,
+      selectedStation: {}
     }
   },
   methods: {
@@ -83,12 +87,28 @@ export default {
       axios
         .get("/api/network/" + this.network.id)
         .then(res => {
-          this.selectedNetwork = res.data;
-          this.stations = selectedNetwork.stations;
+          this.selectedNetwork = res.data
+          this.stations = selectedNetwork.stations
+          this.createStationMarkers()
         })
         .catch(error => {
           console.log(error)
         });
+    },
+    createStationMarkers(){
+      axios
+        .get("/api/network/" + this.network.id)
+        .then(res => {
+          this.selectedNetwork = res.data
+          this.stations = selectedNetwork.stations
+          // this.createStationMarkers()
+        })
+        .catch(error => {
+          console.log(error)
+        });
+    },
+    selectStation(station){
+      this.selectedStation = station
     }
   },
   created() {
