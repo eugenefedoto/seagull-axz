@@ -2,7 +2,7 @@
   <b-container fluid class="map-table-container">
     <b-row no-gutters class="map-table-row">
       <b-col xl="9">
-        <gmap-map ref="map" @bounds_changed="setZoom" :center="center" :zoom="3" style="height: 100%;">
+        <gmap-map ref="map" :center="center" :zoom="3" style="height: 100%;">
           <google-cluster ref="networkClusters">
             <gmap-marker ref="networkMarkers" class="network-markers" :icon="networkMarkerIcon" :key="index" v-for="(networkMarker, index) in networkMarkers" :position="networkMarker.position" :clickable="true" :draggable="true" @click="createStationMarkers(networkMarker)"></gmap-marker>
             <gmap-marker class="station-markers" :icon="networkMarkerIcon" :key="index" v-for="(stationMarker, index) in stationMarkers" :position="m.position" :clickable="true" :draggable="true" @click="selectStation(station)"></gmap-marker>
@@ -17,6 +17,7 @@
 </template>
 
 <script>
+/* global google */
 import * as VueGoogleMaps from 'vue2-google-maps'
 import Vue from 'vue'
 import axios from 'axios'
@@ -49,13 +50,6 @@ export default {
     }
   },
   methods: {
-    setZoom () {
-      const map = this.$refs.map
-      map.setZoom = map.zoom - 1
-      if (map.zoom > 15) {
-        map.setZoom(15)
-      }
-    },
     getNetworks (cb) {
       axios
         .get('/api/network')
@@ -86,21 +80,18 @@ export default {
       this.centerNetworkFitBounds()
     },
     centerNetworkFitBounds () {
-      const map = this.$refs.map
-      console.log(map)
-      const bounds = this.$refs.map.bounds
-      for (let i = 0; i < this.stationMarkers.length; i++) {
-        bounds.extend(this.stationMarkers[i].getPosition())
+      let bounds = new google.maps.LatLngBounds()
+      // console.log(bounds)
+      for (let i = 0; i < this.networkMarkers.length; i++) {
+        // console.log(this.networkMarkers[i].position)
+        bounds.extend(this.networkMarkers[i].position)
       }
-      map.setCenter(bounds.getCenter())
-    },
-    hide () {
-      this.clearMarkers()
+      // console.log(bounds.center)
+      this.center = bounds.getCenter()
     },
     hideNetworkMarkers () {
       for (let i = 0; i < this.networkMarkers.length; i++) {
         const marker = this.$refs.networkMarkers[i].$markerObject
-        // console.log(marker)
         marker.setVisible(false)
       }
     },
