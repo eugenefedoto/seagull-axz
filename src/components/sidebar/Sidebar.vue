@@ -1,5 +1,5 @@
 <template>
-    <img :src="thumbnail320wSrc" alt="station at street level" :srcset="getSrcset">
+    <img :src="thumbnail320wSrc" alt="station at street level" :srcset="getSrcset" :href="photoPageUrl">
 </template>
 
 <script>
@@ -47,6 +47,9 @@ export default {
       const lookAt = "'&lookat=' + lat + ',' + lng"
       const finalUrl = baseUrl + clientId + lookAt
       return finalUrl
+    },
+    photoPageUrl () {
+      return `https://www.mapillary.com/app/?focus=photo&pKey=${this.key}`
     }
   },
   created () {

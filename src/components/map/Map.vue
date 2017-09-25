@@ -2,12 +2,10 @@
   <b-container fluid class="map-table-container">
     <b-row no-gutters class="map-table-row">
       <b-col xl="9">
-        <gmap-map :center="center" :zoom="3" style="height: 100%;">
-          <google-cluster>
-            <gmap-marker class="network-markers" :icon="networkMarkerIcon" :key="index" v-for="(marker, index) in markers" :position="marker.position" :clickable="true" :draggable="true" @click="getStations(marker)"></gmap-marker>
-          </google-cluster>
-          <google-cluster>
-            <gmap-marker class="station-markers" :key="index" v-for="(station, index) in stations" :position="m.position" :clickable="true" :draggable="true" @click="selectStation(station)"></gmap-marker>
+        <gmap-map ref="map" @bounds_changed="setZoom" :center="center" :zoom="3" style="height: 100%;">
+          <google-cluster ref="networkClusters">
+            <gmap-marker ref="networkMarkers" class="network-markers" :icon="networkMarkerIcon" :key="index" v-for="(networkMarker, index) in networkMarkers" :position="networkMarker.position" :clickable="true" :draggable="true" @click="createStationMarkers(networkMarker)"></gmap-marker>
+            <gmap-marker class="station-markers" :icon="networkMarkerIcon" :key="index" v-for="(stationMarker, index) in stationMarkers" :position="m.position" :clickable="true" :draggable="true" @click="selectStation(station)"></gmap-marker>
           </google-cluster>
         </gmap-map>
       </b-col>
@@ -36,27 +34,28 @@ Vue.use(VueGoogleMaps, {
 
 Vue.component('google-cluster', VueGoogleMaps.Cluster)
 
-const items = [
-  { isActive: true, age: 40, first_name: 'Dickerson', last_name: 'Macdonald' },
-  { isActive: false, age: 21, first_name: 'Larsen', last_name: 'Shaw' },
-  { isActive: false, age: 89, first_name: 'Geneva', last_name: 'Wilson' },
-  { isActive: true, age: 38, first_name: 'Jami', last_name: 'Carney' }
-]
-
 export default {
   name: 'map',
   data () {
     return {
       center: { lat: 0, lng: 0 },
-      markers: [],
+      networkMarkers: [],
+      stationMarkers: [],
       networks: [],
       selectedNetwork: {},
+      selectedStation: {},
       stations: [],
-      items: items,
-      selectedStation: {}
+      clicked: false
     }
   },
   methods: {
+    setZoom () {
+      const map = this.$refs.map
+      map.setZoom = map.zoom - 1
+      if (map.zoom > 15) {
+        map.setZoom(15)
+      }
+    },
     getNetworks (cb) {
       axios
         .get('/api/network')
@@ -78,37 +77,76 @@ export default {
           },
           id: network.id
         }
-        this.markers.push(marker)
+        this.networkMarkers.push(marker)
       })
     },
-    getStations (marker) {
-      this.center = marker.position
-      this.network = marker.network
-      axios
-        .get('/api/network/' + this.network.id)
-        .then(res => {
-          this.selectedNetwork = res.data
-          this.stations = this.selectedNetwork.stations
-          this.createStationMarkers()
-        })
-        .catch(error => {
-          console.log(error)
-        })
+    createStationMarkers (selectedNetworkMarker) {
+      this.selectedNetwork = selectedNetworkMarker
+      this.hideNetworkMarkers()
+      this.centerNetworkFitBounds()
     },
-    createStationMarkers () {
-      axios
-        .get('/api/network/' + this.network.id)
-        .then(res => {
-          this.selectedNetwork = res.data
-          this.stations = this.selectedNetwork.stations
-          // this.createStationMarkers()
-        })
-        .catch(error => {
-          console.log(error)
-        })
+    centerNetworkFitBounds () {
+      const map = this.$refs.map
+      console.log(map)
+      const bounds = this.$refs.map.bounds
+      for (let i = 0; i < this.stationMarkers.length; i++) {
+        bounds.extend(this.stationMarkers[i].getPosition())
+      }
+      map.setCenter(bounds.getCenter())
+    },
+    hide () {
+      this.clearMarkers()
+    },
+    hideNetworkMarkers () {
+      for (let i = 0; i < this.networkMarkers.length; i++) {
+        const marker = this.$refs.networkMarkers[i].$markerObject
+        // console.log(marker)
+        marker.setVisible(false)
+      }
+    },
+    removeNetworkClusters () {
+      const networkClusters = this.$refs.networkClusters.$clusterObject.clusters_
+      for (let i = 0; i < networkClusters.length; i++) {
+        const networkCluster = networkClusters[i]
+        networkCluster.markerClusterer_.clearMarkers()
+      }
+    },
+    showNetworkMarkers () {
+      for (let i = 0; i < this.networkMarkers.length; i++) {
+        const marker = this.$refs.networkMarkers[i].$markerObject
+        marker.setVisible(true)
+      }
     },
     selectStation (station) {
       this.selectedStation = station
+    },
+    getStations () {
+      axios
+        .get('/api/network/' + this.selectedNetwork.id)
+        .then(res => {
+          this.stations = res.stations
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    },
+    addStationMarkers () {
+      this.stations.forEach((station) => {
+        const marker = {
+          title: station.name,
+          station,
+          position: {
+            lat: station.lat, lng: station.lng
+          },
+          id: station.id,
+          empty: station.empty,
+          free: station.free,
+          safe: station.safe,
+          open: station.open,
+          time: station.time
+        }
+        this.stationMarkers.push(marker)
+      })
     }
   },
   created () {
